@@ -17,10 +17,12 @@ target_compile_options(start_lib PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE start_lib)
 if(TARGET OpenCV::opencv_core)
-  target_link_libraries(main PRIVATE OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_highgui)
+  # Only opencv_core to avoid imgcodecs (OpenEXR) until opencv is reinstalled.
+  target_link_libraries(main PRIVATE OpenCV::opencv_core)
 else()
   target_include_directories(main PRIVATE ${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(main PRIVATE ${OpenCV_LIBS})
+  # Link core only to avoid OpenEXR; add opencv_imgproc etc. after brew reinstall opencv.
+  target_link_libraries(main PRIVATE opencv_core)
 endif()
 target_compile_options(main PRIVATE -Wall -Wextra -Wpedantic)
 
