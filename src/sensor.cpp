@@ -1,26 +1,18 @@
-#include "sensor.h"
+#include "start/sensor.h"
+
 #include <iostream>
-#include <memory>
 
 // CameraSensor
 int CameraSensor::next_frame_id_ = 0;
 
-std::string CameraSensor::name() const {
-    return "Camera";
-}
+std::string CameraSensor::name() const { return "Camera"; }
 
-int CameraSensor::read_frame() {
-    return next_frame_id_++;
-}
+int CameraSensor::read_frame() { return next_frame_id_++; }
 
 // DummySensor
-std::string DummySensor::name() const {
-    return "Dummy";
-}
+std::string DummySensor::name() const { return "Dummy"; }
 
-int DummySensor::read_frame() {
-    return -1;
-}
+int DummySensor::read_frame() { return -1; }
 
 // Free functions
 

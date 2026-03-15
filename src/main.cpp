@@ -6,7 +6,7 @@
 #include <variant>
 #include <vector>
 
-#include "sensor.h"
+#include "start/sensor.h"
 
 void print_name(const std::string& name) { std::cout << "My name is " << name << std::endl; }
 
@@ -82,7 +82,7 @@ void error_handling_examples() {
     }
 }
 
-// Step 3 (abstract classes) live in sensor.h / sensor.cpp (Step 4: headers).
+// Step 3 (abstract classes) live in include/start/sensor.h and src/sensor.cpp.
 
 // ============== Step 5: RECOMMENDATIONS FOR OPENCV / GTSAM / SLAM ==============
 // - RAII: tie resources to object lifetime; no raw new/delete (use smart pointers, containers).
