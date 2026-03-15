@@ -1,0 +1,2 @@
+include("${CMAKE_CURRENT_LIST_DIR}/startTargets.cmake")
+set(start_VERSION_STRING @start_VERSION@)

@@ -1,16 +1,20 @@
 cmake_minimum_required(VERSION 3.20)
-project(start CXX)
+project(start VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(GNUInstallDirs)
 
 # OpenCV (required; install: brew install opencv)
 find_package(OpenCV REQUIRED)
 
 # Library: sources under src/, public API under include/
 add_library(start_lib src/sensor.cpp)
-target_include_directories(start_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(start_lib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 target_compile_options(start_lib PRIVATE -Wall -Wextra -Wpedantic)
 
 # Main executable
@@ -32,3 +36,40 @@ if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# ---- Install for reuse (other projects: find_package(start CONFIG)) ----
+install(TARGETS start_lib
+  EXPORT startTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+install(EXPORT startTargets
+  NAMESPACE start::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/start
+  FILE startTargets.cmake
+)
+
+set(start_VERSION ${PROJECT_VERSION})
+configure_file(cmake/startConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/startConfig.cmake
+  @ONLY
+)
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/startConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/startConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/startConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/start
+)
