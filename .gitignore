@@ -1,3 +1,7 @@
 build*
+install_dir
 .vscode*
 .DS_Store
+start_lib/*.so
+start_lib/*.pyd
+*egg-info

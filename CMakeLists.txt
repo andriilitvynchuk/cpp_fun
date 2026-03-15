@@ -6,8 +6,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(GNUInstallDirs)
 
-# OpenCV (required; install: brew install opencv)
+# OpenCV (required for main; install: brew install opencv)
 find_package(OpenCV REQUIRED)
+
+# ---- Python bindings (optional) ----
+option(BUILD_PYTHON "Build Python bindings (start_lib)" OFF)
+if(BUILD_PYTHON)
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+  include(FetchContent)
+  FetchContent_Declare(
+    pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11
+    GIT_TAG        v2.11.1
+  )
+  FetchContent_MakeAvailable(pybind11)
+  pybind11_add_module(start_lib_py src/bindings.cpp)
+  set_target_properties(start_lib_py PROPERTIES OUTPUT_NAME _start_lib PREFIX "")
+  target_link_libraries(start_lib_py PRIVATE start_lib)
+  target_include_directories(start_lib_py PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+endif()
 
 # Library: sources under src/, public API under include/
 add_library(start_lib src/sensor.cpp)
