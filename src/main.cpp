@@ -8,11 +8,13 @@
 
 #include "start/sensor.h"
 
+#include <opencv2/core.hpp>
+
 void print_name(const std::string& name) { std::cout << "My name is " << name << std::endl; }
 
 // ============== Step 1: TEMPLATES ==============
 // Templates = code parameterized by type (or value). Compiler generates concrete code per type.
-// Used everywhere: std::vector<T>, cv::Mat, Eigen::Matrix<T,R,C>, gtsam types.
+// Used everywhere: std::vector<T>, cv::Mat, Eigen::Matrix<T,R,C>.
 
 // Function template: one implementation, many types
 template <typename T>
@@ -46,8 +48,7 @@ struct TrackingLostError : std::runtime_error {
 
 // Throw when precondition is violated (programming error or invalid input).
 double safe_divide(double a, double b) {
-    if (b == 0.0)
-        throw std::invalid_argument("safe_divide: divisor is zero");
+    if (b == 0.0) throw std::invalid_argument("safe_divide: divisor is zero");
     return a / b;
 }
 
@@ -86,9 +87,11 @@ void error_handling_examples() {
 
 // ============== Step 5: RECOMMENDATIONS FOR OPENCV / GTSAM / SLAM ==============
 // - RAII: tie resources to object lifetime; no raw new/delete (use smart pointers, containers).
-// - Rule of 0/3/5: if you need custom dtor/copy/move, define all that are needed; else = default or omit.
-// - Namespaces: use your own (e.g. slam_demo::) to avoid clashes with cv::, gtsam::, std::.
-// - Const ref for big types: pass cv::Mat, Eigen::Matrix, gtsam::Values by const ref when read-only.
+// - Rule of 0/3/5: if you need custom dtor/copy/move, define all that are needed; else = default or
+// omit.
+// - Namespaces: use your own (e.g. slam_demo::) to avoid clashes with cv::, std::.
+// - Const ref for big types: pass cv::Mat, Eigen::Matrix by const ref when
+// read-only.
 // - Config structs: named params for system/frontend/backend (you already saw this).
 
 namespace slam_demo {
@@ -99,7 +102,8 @@ struct TrackerConfig {
     bool use_rotation = true;
 };
 
-// RAII: resource (here just "scope") tied to object lifetime. Like cv::Mat releasing memory in dtor.
+// RAII: resource (here just "scope") tied to object lifetime. Like cv::Mat releasing memory in
+// dtor.
 class ScopeTrace {
 public:
     explicit ScopeTrace(const std::string& label) : label_(label) {
@@ -255,7 +259,8 @@ int main() {
     Buffer<double> dbuf(2);
     dbuf.at(0) = 0.5;
     dbuf.at(1) = 1.5;
-    std::cout << "Buffer<int> size " << ibuf.size() << ", Buffer<double> size " << dbuf.size() << std::endl;
+    std::cout << "Buffer<int> size " << ibuf.size() << ", Buffer<double> size " << dbuf.size()
+              << std::endl;
 
     // Step 2: Error handling
     error_handling_examples();
@@ -263,7 +268,7 @@ int main() {
     // Step 3: Abstract classes & interfaces
     abstract_class_examples();
 
-    // Step 5: RAII, namespaces, config structs (OpenCV/GTSAM/SLAM style)
+    // Step 5: RAII, namespaces, config structs (OpenCV/SLAM style)
     slam_demo::step5_examples();
 
     stl.ranges_examples();

@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# OpenCV (required; install: brew install opencv)
+find_package(OpenCV REQUIRED)
+
 # Library: sources under src/, public API under include/
 add_library(start_lib src/sensor.cpp)
 target_include_directories(start_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -13,6 +16,12 @@ target_compile_options(start_lib PRIVATE -Wall -Wextra -Wpedantic)
 # Main executable
 add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE start_lib)
+if(TARGET OpenCV::opencv_core)
+  target_link_libraries(main PRIVATE OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_highgui)
+else()
+  target_include_directories(main PRIVATE ${OpenCV_INCLUDE_DIRS})
+  target_link_libraries(main PRIVATE ${OpenCV_LIBS})
+endif()
 target_compile_options(main PRIVATE -Wall -Wextra -Wpedantic)
 
 # Tests (optional: cmake -B build -DBUILD_TESTS=OFF to skip)
