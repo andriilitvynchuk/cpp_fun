@@ -1,0 +1,13 @@
+{
+  "name": "start",
+  "version": "1.0.0",
+  "builtin-baseline": "77df67cfff9c12ccfdb52284e07c87c75092f723",
+  "dependencies": [
+    { "name": "pybind11", "version>=": "2.11.1" },
+    { "name": "gtest",    "version>=": "1.14.0" }
+  ],
+  "overrides": [
+    { "name": "pybind11", "version": "2.11.1" },
+    { "name": "gtest",    "version": "1.14.0" }
+  ]
+}
