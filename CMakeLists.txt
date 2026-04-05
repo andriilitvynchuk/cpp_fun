@@ -9,6 +9,9 @@ include(GNUInstallDirs)
 # OpenCV (required for main; install: brew install opencv)
 find_package(OpenCV REQUIRED)
 
+# ---- spdlog logging (install: brew install spdlog) ----
+find_package(spdlog REQUIRED)
+
 # ---- Python bindings (optional) ----
 option(BUILD_PYTHON "Build Python bindings (start_lib)" OFF)
 if(BUILD_PYTHON)
@@ -45,6 +48,7 @@ else()
   # Link core only to avoid OpenEXR; add opencv_imgproc etc. after brew reinstall opencv.
   target_link_libraries(main PRIVATE opencv_core)
 endif()
+target_link_libraries(main PRIVATE spdlog::spdlog)
 target_compile_options(main PRIVATE -Wall -Wextra -Wpedantic)
 
 # Tests (optional: cmake -B build -DBUILD_TESTS=OFF to skip)

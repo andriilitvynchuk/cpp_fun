@@ -7,6 +7,9 @@
 #include <variant>
 #include <vector>
 
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+
 #include "start/sensor.h"
 
 void print_name(const std::string& name) {
@@ -221,6 +224,50 @@ class STL {
   }
 };
 
+// ============== Step 6: LOGGING (spdlog) ==============
+// spdlog is a header-only, fast logging library built on top of {fmt}.
+//
+// Key concepts:
+//   Logger  — named handle; owns one or more sinks; has its own log level.
+//   Sink    — destination (stdout_color, rotating_file, daily_file, …).
+//   Level   — trace < debug < info < warn < err < critical < off.
+//   Format  — {fmt}-style placeholders: logger->info("x={}", x);
+
+void logging_examples(std::shared_ptr<spdlog::logger> log) {
+  // --- 1. All log levels ---
+  log->trace("trace: entering logging_examples()");
+  log->debug("debug: sensor pipeline version {}.{}", 1, 0);
+  log->info("info:  application ready");
+  log->warn("warn:  frame budget {}ms exceeded by {}ms", 33, 5);
+  log->error("error: sensor '{}' returned unexpected value {}", "IMU", -999);
+  log->critical("critical: navigation subsystem unresponsive");
+
+  // --- 2. Logging computed values ---
+  CameraSensor cam;
+  log->info("created sensor name='{}'", cam.name());
+
+  const int frame_a = cam.read_frame();
+  const int frame_b = cam.read_frame();
+  log->debug("read two frames: {} then {}", frame_a, frame_b);
+
+  // --- 3. Conditional log (guard expensive formatting) ---
+  DummySensor dummy;
+  const int dummy_frame = dummy.read_frame();
+  if (dummy_frame < 0) {
+    log->warn("sensor '{}' returned sentinel value {}; skipping",
+              dummy.name(), dummy_frame);
+  }
+
+  // --- 4. Logging inside error-handling flow ---
+  try {
+    if (dummy_frame == -1) throw std::runtime_error("no valid frame");
+  } catch (const std::exception& e) {
+    log->error("caught exception: {}", e.what());
+  }
+
+  log->info("logging_examples() done");
+}
+
 int main() {
   std::string name = "Andrii & Kate L";
   print_name(name);
@@ -287,5 +334,11 @@ int main() {
   slam_demo::step5_examples();
 
   stl.ranges_examples();
+
+  // Step 6: Logging — create a named colour-console logger, set level to trace
+  auto log = spdlog::stdout_color_mt("main");
+  log->set_level(spdlog::level::trace);
+  logging_examples(log);
+
   return 0;
 }
