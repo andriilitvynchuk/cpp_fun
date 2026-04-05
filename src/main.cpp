@@ -7,8 +7,9 @@
 #include <variant>
 #include <vector>
 
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
+#include "quill/SimpleSetup.h"
 
 #include "start/sensor.h"
 
@@ -224,48 +225,53 @@ class STL {
   }
 };
 
-// ============== Step 6: LOGGING (spdlog) ==============
-// spdlog is a header-only, fast logging library built on top of {fmt}.
+// ============== Step 6: LOGGING (Quill) ==============
+// Quill enqueues log records on the calling thread into a lock-free SPSC queue;
+// a dedicated backend thread formats and writes them — the hot path is nearly
+// zero-cost.
 //
 // Key concepts:
-//   Logger  — named handle; owns one or more sinks; has its own log level.
-//   Sink    — destination (stdout_color, rotating_file, daily_file, …).
-//   Level   — trace < debug < info < warn < err < critical < off.
-//   Format  — {fmt}-style placeholders: logger->info("x={}", x);
+//   Backend  — one I/O thread per process; started once via simple_logger() or
+//              Backend::start().
+//   Sink     — destination (ConsoleSink, FileSink, RotatingFileSink, …).
+//   Logger*  — raw pointer; owns sinks + runtime level; created via Frontend.
+//   Macros   — LOG_INFO(logger, fmt, …) — {fmt}-style placeholders.
+//   Levels   — TRACE_L3 < TRACE_L2 < TRACE_L1 < DEBUG < INFO < NOTICE <
+//              WARNING < ERROR < CRITICAL
 
-void logging_examples(std::shared_ptr<spdlog::logger> log) {
+void logging_examples(quill::Logger* logger) {
   // --- 1. All log levels ---
-  log->trace("trace: entering logging_examples()");
-  log->debug("debug: sensor pipeline version {}.{}", 1, 0);
-  log->info("info:  application ready");
-  log->warn("warn:  frame budget {}ms exceeded by {}ms", 33, 5);
-  log->error("error: sensor '{}' returned unexpected value {}", "IMU", -999);
-  log->critical("critical: navigation subsystem unresponsive");
+  LOG_TRACE_L3(logger, "trace: entering logging_examples()");
+  LOG_DEBUG(logger, "debug: sensor pipeline version {}.{}", 1, 0);
+  LOG_INFO(logger, "info:  application ready");
+  LOG_WARNING(logger, "warn:  frame budget {}ms exceeded by {}ms", 33, 5);
+  LOG_ERROR(logger, "error: sensor '{}' returned unexpected value {}", "IMU", -999);
+  LOG_CRITICAL(logger, "critical: navigation subsystem unresponsive");
 
   // --- 2. Logging computed values ---
   CameraSensor cam;
-  log->info("created sensor name='{}'", cam.name());
+  LOG_INFO(logger, "created sensor name='{}'", cam.name());
 
   const int frame_a = cam.read_frame();
   const int frame_b = cam.read_frame();
-  log->debug("read two frames: {} then {}", frame_a, frame_b);
+  LOG_DEBUG(logger, "read two frames: {} then {}", frame_a, frame_b);
 
-  // --- 3. Conditional log (guard expensive formatting) ---
+  // --- 3. Conditional log (guard expensive work before formatting) ---
   DummySensor dummy;
   const int dummy_frame = dummy.read_frame();
   if (dummy_frame < 0) {
-    log->warn("sensor '{}' returned sentinel value {}; skipping",
-              dummy.name(), dummy_frame);
+    LOG_WARNING(logger, "sensor '{}' returned sentinel value {}; skipping",
+                dummy.name(), dummy_frame);
   }
 
   // --- 4. Logging inside error-handling flow ---
   try {
     if (dummy_frame == -1) throw std::runtime_error("no valid frame");
   } catch (const std::exception& e) {
-    log->error("caught exception: {}", e.what());
+    LOG_ERROR(logger, "caught exception: {}", e.what());
   }
 
-  log->info("logging_examples() done");
+  LOG_INFO(logger, "logging_examples() done");
 }
 
 int main() {
@@ -335,10 +341,12 @@ int main() {
 
   stl.ranges_examples();
 
-  // Step 6: Logging — create a named colour-console logger, set level to trace
-  auto log = spdlog::stdout_color_mt("main");
-  log->set_level(spdlog::level::trace);
-  logging_examples(log);
+  // Step 6: Logging — simple_logger() starts the backend thread and returns a
+  // stdout logger. Backend::stop() flushes all queued messages before exit.
+  quill::Logger* logger = quill::simple_logger();
+  logger->set_log_level(quill::LogLevel::TraceL3);
+  logging_examples(logger);
+  quill::Backend::stop();
 
   return 0;
 }
