@@ -7,9 +7,11 @@
 #include <variant>
 #include <vector>
 
+#include "quill/Backend.h"
+#include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
-#include "quill/SimpleSetup.h"
+#include "quill/sinks/FileSink.h"
 
 #include "start/sensor.h"
 
@@ -341,10 +343,21 @@ int main() {
 
   stl.ranges_examples();
 
-  // Step 6: Logging — simple_logger() starts the backend thread and returns a
-  // stdout logger. Backend::stop() flushes all queued messages before exit.
-  quill::Logger* logger = quill::simple_logger();
+  // Step 6: Logging — two file sinks on one logger, each with its own filter.
+  //   log.txt        — DEBUG and above  (debug, info, warning, error, critical)
+  //   global_log.txt — INFO  and above  (info, warning, error, critical)
+  quill::Backend::start();
+
+  auto sink_debug = quill::Frontend::create_or_get_sink<quill::FileSink>("log.txt");
+  sink_debug->set_log_level_filter(quill::LogLevel::Debug);
+
+  auto sink_global = quill::Frontend::create_or_get_sink<quill::FileSink>("global_log.txt");
+  sink_global->set_log_level_filter(quill::LogLevel::Info);
+
+  quill::Logger* logger = quill::Frontend::create_or_get_logger(
+      "main", {std::move(sink_debug), std::move(sink_global)});
   logger->set_log_level(quill::LogLevel::TraceL3);
+
   logging_examples(logger);
   quill::Backend::stop();
 
