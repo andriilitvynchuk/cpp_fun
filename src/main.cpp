@@ -9,7 +9,9 @@
 
 #include "start/sensor.h"
 
-void print_name(const std::string& name) { std::cout << "My name is " << name << std::endl; }
+void print_name(const std::string& name) {
+  std::cout << "My name is " << name << std::endl;
+}
 
 // ============== Step 1: TEMPLATES ==============
 // Templates = code parameterized by type (or value). Compiler generates
@@ -45,7 +47,8 @@ class Buffer {
 // Custom exception: useful for domain errors (e.g. SLAM: tracking lost, no
 // pose).
 struct TrackingLostError : std::runtime_error {
-  explicit TrackingLostError(const std::string& msg) : std::runtime_error(msg) {}
+  explicit TrackingLostError(const std::string& msg)
+      : std::runtime_error(msg) {}
 };
 
 // Throw when precondition is violated (programming error or invalid input).
@@ -113,7 +116,9 @@ struct TrackerConfig {
 // releasing memory in dtor.
 class ScopeTrace {
  public:
-  explicit ScopeTrace(const std::string& label) : label_(label) { std::cout << "[enter] " << label_ << std::endl; }
+  explicit ScopeTrace(const std::string& label) : label_(label) {
+    std::cout << "[enter] " << label_ << std::endl;
+  }
   ~ScopeTrace() { std::cout << "[exit] " << label_ << std::endl; }
   ScopeTrace(const ScopeTrace&) = delete;
   ScopeTrace& operator=(const ScopeTrace&) = delete;
@@ -144,7 +149,8 @@ class Learner {
 
  public:
   Learner(std::string private_field) : private_field_(private_field) {}
-  Learner(std::string private_field, std::vector<int> pixels) : private_field_(private_field), pixels_(pixels) {}
+  Learner(std::string private_field, std::vector<int> pixels)
+      : private_field_(private_field), pixels_(pixels) {}
   ~Learner() { std::cout << "Learner destructor" << std::endl; }
 
   std::string get_private_field() { return private_field_; }
@@ -188,7 +194,8 @@ class STL {
     std::vector<int> pixels = {4, 2, 1, 3};
     std::cout << pixels.size() << std::endl;
 
-    std::sort(pixels.begin(), pixels.end(), [](int& a, int& b) { return a > b; });
+    std::sort(pixels.begin(), pixels.end(),
+              [](int& a, int& b) { return a > b; });
     for (auto& pixel : pixels) {
       std::cout << pixel << std::endl;
     }
@@ -202,8 +209,11 @@ class STL {
 
   void ranges_examples() {
     auto vector = std::vector<int>({1, 2, 3, 4, 5});
-    auto result = vector | std::ranges::views::filter([](int& element) { return element % 2 == 0; }) |
-                  std::ranges::views::transform([](int& element) { return element * 2; });
+    auto result =
+        vector | std::ranges::views::filter([](int& element) {
+          return element % 2 == 0;
+        }) |
+        std::ranges::views::transform([](int& element) { return element * 2; });
     for (auto element : result) {
       std::cout << element << " ";
     }
@@ -219,7 +229,8 @@ int main() {
   std::cout << learner.get_private_field() << std::endl;
 
   auto learner_pointer = std::unique_ptr<Learner>(new Learner(name));
-  std::cout << learner_pointer << learner_pointer->get_private_field() << std::endl;
+  std::cout << learner_pointer << learner_pointer->get_private_field()
+            << std::endl;
 
   learner_pointer->unique_ptr_examples();
 
@@ -254,7 +265,8 @@ int main() {
   std::visit([](auto&& arg) { std::cout << arg << "\n"; }, variant);
 
   // Step 1: Templates
-  std::cout << clamp(10, 0, 5) << " " << clamp(3.14, 0.0, 1.0) << std::endl;  // 5, 1
+  std::cout << clamp(10, 0, 5) << " " << clamp(3.14, 0.0, 1.0)
+            << std::endl;  // 5, 1
   Buffer<int> ibuf(3);
   ibuf.at(0) = 1;
   ibuf.at(1) = 2;
@@ -262,7 +274,8 @@ int main() {
   Buffer<double> dbuf(2);
   dbuf.at(0) = 0.5;
   dbuf.at(1) = 1.5;
-  std::cout << "Buffer<int> size " << ibuf.size() << ", Buffer<double> size " << dbuf.size() << std::endl;
+  std::cout << "Buffer<int> size " << ibuf.size() << ", Buffer<double> size "
+            << dbuf.size() << std::endl;
 
   // Step 2: Error handling
   error_handling_examples();
